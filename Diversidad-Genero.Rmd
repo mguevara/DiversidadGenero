@@ -1,0 +1,103 @@
+---
+title: "Diversidad de Género en Ministerios"
+output:
+  html_document:
+    df_print: paged
+---
+
+Códigos que acompañan artículo en Medium, respecto de diversidad de género en cuanto a Ministras y Ministros de Chile 2018. 
+
+```{r ReadData, message=FALSE, warning=FALSE}
+library(readr)
+library(ggplot2)
+library(plotly)
+
+#library(utf8)
+Ministerios <- read_csv("BD-Ministerios.csv", locale = locale('es'))
+#Encoding(Ministerios$Ministerio) <- "latin1"
+#as_utf8(Ministerios$Ministerio)
+#utf8_print(Ministerios$Ministerio)
+head(Ministerios)
+```
+## Cuota
+```{r}
+library(waffle)
+library(extrafont)
+datos_sexo = c(table(Ministerios$Sexo)[[1]],table(Ministerios$Sexo)[[2]])
+waffle(c(Hombres=datos_sexo[2],Mujeres=datos_sexo[1]), rows = 3, use_glyph = "child", glyph_size = 10,)
+```
+
+
+
+## Ponderación por ranking
+```{r message=FALSE, warning=FALSE, paged.print=FALSE}
+Ministerios['Peso_politico'] <- (-1*(Ministerios$`Orden Llamado`-23))+1
+
+p <-ggplot(data= Ministerios, aes(x=X, y=Peso_politico, label=Ministerio, text=Nombre)) +
+  geom_bar(stat = "identity") + theme_minimal() +
+  labs(x="Ministerios", y="Peso politico")+
+  theme(axis.text.x=element_blank())
+print(p)
+
+p <-ggplot(data= Ministerios, aes(x=X, y=Peso_politico, fill=Sexo, label=Ministerio, text=Nombre)) +
+  geom_bar(stat = "identity") + theme_minimal() +
+  labs(x="Ministerios", y="Peso politico")+
+  theme(axis.text.x=element_blank())
+print(p)
+
+
+ggplotly(p, tooltip = c('Peso_politico','Ministerio','Nombre'))
+
+total = aggregate(Peso_politico ~ Sexo, Ministerios, sum)
+total['%'] <- total$Peso_politico/sum(total$Peso_politico) *100
+print(total)
+
+
+```
+
+
+
+```{r}
+Ministerios['Antiguedad'] <- 2018 - Ministerios$Creacion
+p <-ggplot(data= Ministerios, aes(x=X, y=Antiguedad, fill=Sexo, label=Ministerio, text=Nombre)) +
+  geom_bar(stat = "identity") + theme_minimal() +
+  labs(x="Ministerios", y="Antiguedad (a.os)")+
+  theme(axis.text.x=element_blank())
+print(p)
+
+ggplotly(p, tooltip = c('Antiguedad','Ministerio','Nombre'))
+
+total = aggregate(Antiguedad ~ Sexo, Ministerios, sum)
+total['%'] <- total$Antiguedad/sum(total$Antiguedad)*100
+print(total)
+```
+```{r}
+Ministerios['Tamano'] <- Ministerios$Trabajadores 
+p <-ggplot(data= Ministerios, aes(x=X, y=Tamano, fill=Sexo, label=Ministerio, text=Nombre)) +
+  geom_bar(stat = "identity") + theme_minimal() +
+  labs(x="Ministerios", y="Cantidad trabajadores")+
+  theme(axis.text.x=element_blank())
+print(p)
+
+ggplotly(p, tooltip = c('Tamano','Ministerio','Nombre'))
+
+total = aggregate(Tamano ~ Sexo, Ministerios, sum)
+total['%'] <- total$Tamano/sum(total$Tamano)*100
+print(total)
+```
+
+
+```{r}
+Ministerios['Presupuesto'] <- Ministerios$`Presupuesto 2018`
+p <-ggplot(data= Ministerios, aes(x=X, y=Presupuesto, fill=Sexo, label=Ministerio, text=Nombre)) +
+  geom_bar(stat = "identity") + theme_minimal() +
+  labs(x="Ministerios", y="Presupuesto (miles de pesos)")+
+  theme(axis.text.x=element_blank())
+print(p)
+
+ggplotly(p, tooltip = c('Presupuesto','Ministerio','Nombre'))
+
+total = aggregate(Presupuesto ~ Sexo, Ministerios, sum)
+total['%'] <- total$Presupuesto/sum(total$Presupuesto)*100
+print(total)
+```
